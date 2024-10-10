@@ -65,30 +65,40 @@ getJavaVersion() {
         echo "error"
     fi
 }
+
+# Install functions
+installsdkman() {
+if [ ! "$(command -v sdk version)" ]; then
+    curl -s "https://get.sdkman.io" | bash
+    source ".sdkman/bin/sdkman-init.sh"
+fi
+}
+
 # Validation functions
+JAVA_VERSION=$(getJavaVersion)
 
-    JAVA_VERSION=$(getJavaVersion)
-    
-    installsdkman
-    VER_EXISTS=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r --arg VERSION $MINECRAFT_VERSION '.versions[] | contains($VERSION)' | grep -m1 true)
-	LATEST_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.versions' | jq -r '.[-1]')
+installsdkman
+VER_EXISTS=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r --arg VERSION $MINECRAFT_VERSION '.versions[] | contains($VERSION)' | grep -m1 true)
+LATEST_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.versions' | jq -r '.[-1]')
 
-	if [ "${VER_EXISTS}" != "true" ]; then
-		MINECRAFT_VERSION=${LATEST_VERSION}
-	fi
-    MINECRAFT_VERSION_CODE=$(echo "$MINECRAFT_VERSION" | cut -d. -f1-2 | tr -d '.')
+if [ "${VER_EXISTS}" != "true" ]; then
+    MINECRAFT_VERSION=${LATEST_VERSION}
+fi
+
+MINECRAFT_VERSION_CODE=$(echo "$MINECRAFT_VERSION" | cut -d. -f1-2 | tr -d '.')
+
+# Update Java version handling for Minecraft 1.16.x
 if [ "$MINECRAFT_VERSION_CODE" -ge "120" ]; then
     sdk install java 21.0.2-tem
 elif [ "$MINECRAFT_VERSION_CODE" -ge "117" ]; then
     sdk install java 17.0.0-tem
 elif [ "$MINECRAFT_VERSION_CODE" -ge "116" ]; then
-    sdk install java 16.0.1-tem
+    sdk install java 16.0.0-tem
 elif [ "$MINECRAFT_VERSION_CODE" -ge "112" ]; then
     sdk install java 11.0.22-tem
 elif [ "$MINECRAFT_VERSION_CODE" -eq "18" ]; then
     sdk install java 8.0.392-tem
 fi
-
 
 # Launch functions
 launchJavaServer() {
