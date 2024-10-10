@@ -65,43 +65,26 @@ getJavaVersion() {
         echo "error"
     fi
 }
-
-# Install functions
-installsdkman() {
-    if [ ! "$(command -v sdk version)" ]; then
-        curl -s "https://get.sdkman.io" | bash
-        source "$HOME/.sdkman/bin/sdkman-init.sh"
-    fi
-}
-
 # Validation functions
-JAVA_VERSION=$(getJavaVersion)
 
-installsdkman
-VER_EXISTS=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r --arg VERSION $MINECRAFT_VERSION '.versions[] | contains($VERSION)' | grep -m1 true)
-LATEST_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.versions' | jq -r '.[-1]')
+    JAVA_VERSION=$(getJavaVersion)
+    
+    installsdkman
+    VER_EXISTS=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r --arg VERSION $MINECRAFT_VERSION '.versions[] | contains($VERSION)' | grep -m1 true)
+	LATEST_VERSION=$(curl -s https://api.papermc.io/v2/projects/paper | jq -r '.versions' | jq -r '.[-1]')
 
-if [ "${VER_EXISTS}" != "true" ]; then
-    MINECRAFT_VERSION=${LATEST_VERSION}
-fi
-
-# Get major and minor version parts (e.g., 1.16 for 1.16.x)
-MINECRAFT_MAJOR_MINOR=$(echo "$MINECRAFT_VERSION" | cut -d. -f1-2)
-
-# Update Java version handling for different Minecraft versions
-if [[ "$MINECRAFT_MAJOR_MINOR" > "1.19" ]]; then
+	if [ "${VER_EXISTS}" != "true" ]; then
+		MINECRAFT_VERSION=${LATEST_VERSION}
+	fi
+    MINECRAFT_VERSION_CODE=$(echo "$MINECRAFT_VERSION" | cut -d. -f1-2 | tr -d '.')
+if [ "$MINECRAFT_VERSION_CODE" -ge "120" ]; then
     sdk install java 21.0.2-tem
-elif [[ "$MINECRAFT_MAJOR_MINOR" == "1.17" || "$MINECRAFT_MAJOR_MINOR" == "1.18" ]]; then
+elif [ "$MINECRAFT_VERSION_CODE" -ge "117" ]; then
     sdk install java 17.0.0-tem
-elif [[ "$MINECRAFT_MAJOR_MINOR" == "1.16" ]]; then
-    sdk install java 16.0.0-tem  # For Minecraft 1.16.x, use Java 16
-elif [[ "$MINECRAFT_MAJOR_MINOR" == "1.12" || "$MINECRAFT_MAJOR_MINOR" == "1.13" || "$MINECRAFT_MAJOR_MINOR" == "1.14" || "$MINECRAFT_MAJOR_MINOR" == "1.15" ]]; then
+elif [ "$MINECRAFT_VERSION_CODE" -ge "112" ]; then
     sdk install java 11.0.22-tem
-elif [[ "$MINECRAFT_MAJOR_MINOR" == "1.8" ]]; then
+elif [ "$MINECRAFT_VERSION_CODE" -eq "18" ]; then
     sdk install java 8.0.392-tem
-else
-    echo "Unknown Minecraft version: $MINECRAFT_VERSION"
-    exit 1
 fi
 
 
